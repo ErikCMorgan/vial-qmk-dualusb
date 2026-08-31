@@ -1,36 +1,31 @@
-# Quantum Mechanical Keyboard Firmware
+# vial-qmk-dualusb
 
-[![Current Version](https://img.shields.io/github/tag/qmk/qmk_firmware.svg)](https://github.com/qmk/qmk_firmware/tags)
-[![Discord](https://img.shields.io/discord/440868230475677696.svg)](https://discord.gg/qmk)
-[![Docs Status](https://img.shields.io/badge/docs-ready-orange.svg)](https://docs.qmk.fm)
-[![GitHub contributors](https://img.shields.io/github/contributors/qmk/qmk_firmware.svg)](https://github.com/qmk/qmk_firmware/pulse/monthly)
-[![GitHub forks](https://img.shields.io/github/forks/qmk/qmk_firmware.svg?style=social&label=Fork)](https://github.com/qmk/qmk_firmware/)
+A fork of [svalboard/vial-qmk](https://github.com/svalboard/vial-qmk) adding the **`dualusb`** keymap: Svalboard firmware where **each half gets its own USB cable**.
 
-This is a keyboard firmware based on the [tmk\_keyboard firmware](https://github.com/tmk/tmk_keyboard) with some useful features for Atmel AVR and ARM controllers, and more specifically, the [OLKB product line](https://olkb.com), the [ErgoDox EZ](https://ergodox-ez.com) keyboard, and the Clueboard product line.
+The left half sends the keyboard. The right half sends all the pointer data for both trackballs, straight to the PC.
 
-## Documentation
+```
+LEFT half  ──USB──> chording dongle / KVM ──> PC      keys
+   │
+   └── split cable (pointer data crosses here) ──┐
+                                                 ▼
+RIGHT half ──USB───────────────────────────────> PC      mouse
+```
 
-* [See the official documentation on docs.qmk.fm](https://docs.qmk.fm)
+This exists because the [CharaChorder X](https://www.charachorder.com/) chording dongle can't pass a Svalboard: stock firmware sends nothing through it (NKRO routes keypresses to an endpoint the dongle never reads), and its pointer handling transposes X/Y and drops scroll entirely — with any mouse. Sending the keys down one cable and the pointer down another sidesteps both.
 
-The docs are powered by [VitePress](https://vitepress.dev/). They are also viewable offline; see [Previewing the Documentation](https://docs.qmk.fm/#/contributing?id=previewing-the-documentation) for more details.
+Also adds **sprint keys** (`SV_SPRINT_2/3/5`) — hold for 2×/3×/5× pointer speed, the mirror of the existing sniper keys.
 
-You can request changes by making a fork and opening a [pull request](https://github.com/qmk/qmk_firmware/pulls).
+## → [Full documentation](keyboards/svalboard/keymaps/dualusb/README.md)
 
-## Supported Keyboards
+Setup steps, quirks, and build instructions.
 
-* [Planck](/keyboards/planck/)
-* [Preonic](/keyboards/preonic/)
-* [ErgoDox EZ](/keyboards/ergodox_ez/)
-* [Clueboard](/keyboards/clueboard/)
-* [Cluepad](/keyboards/clueboard/17/)
-* [Atreus](/keyboards/atreus/)
+## → [Releases](../../releases)
 
-The project also includes community support for [lots of other keyboards](/keyboards/).
+Prebuilt `.uf2` files for Svalboard "lightly" with PMW3389 trackballs.
 
-## Maintainers
+---
 
-QMK is developed and maintained by Jack Humbert of OLKB with contributions from the community, and of course, [Hasu](https://github.com/tmk). The OLKB product firmwares are maintained by [Jack Humbert](https://github.com/jackhumbert), the Ergodox EZ by [ZSA Technology Labs](https://github.com/zsa), the Clueboard by [Zach White](https://github.com/skullydazed), and the Atreus by [Phil Hagelberg](https://github.com/technomancy).
+Everything else in this repository is upstream vial-qmk, unmodified. GPL v2.
 
-## Official Website
-
-[qmk.fm](https://qmk.fm) is the official website of QMK, where you can find links to this page, the documentation, and the keyboards supported by QMK.
+Original QMK readme: [docs.qmk.fm](https://docs.qmk.fm)
