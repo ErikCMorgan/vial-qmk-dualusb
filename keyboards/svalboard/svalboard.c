@@ -163,12 +163,24 @@ int16_t get_right_dpi() {
 // TODO: Still need to add code to save values.
 void set_left_dpi(uint8_t index) {
     uprintf("LDPI: %d %d\n", index, dpi_choices[index]);
+#if defined(POINTING_DEVICE_ENABLE) && defined(SPLIT_POINTING_ENABLE)
     pointing_device_set_cpi_on_side(true, dpi_choices[index]);
+#elif defined(POINTING_DEVICE_ENABLE)
+    if (is_keyboard_left()) pointing_device_set_cpi(dpi_choices[index]);
+#else
+    (void)index;
+#endif
 }
 
 void set_right_dpi(uint8_t index) {
     uprintf("RDPI: %d %d\n", index, dpi_choices[index]);
+#if defined(POINTING_DEVICE_ENABLE) && defined(SPLIT_POINTING_ENABLE)
     pointing_device_set_cpi_on_side(false, dpi_choices[index]);
+#elif defined(POINTING_DEVICE_ENABLE)
+    if (!is_keyboard_left()) pointing_device_set_cpi(dpi_choices[index]);
+#else
+    (void)index;
+#endif
 }
 
 void set_dpi_from_eeprom(void) {
@@ -179,25 +191,30 @@ void set_dpi_from_eeprom(void) {
 void sval_set_active_layer(uint32_t layer, bool save) {
     if (layer > 15) layer = 15;
     sval_active_layer = layer;
+#ifdef RGBLIGHT_ENABLE
     struct layer_hsv cols = global_saved_values.layer_colors[layer];
     if (save) {
         rgblight_sethsv(cols.hue, cols.sat, rgblight_get_val()); //store using current brightness
     } else {
         rgblight_sethsv_noeeprom(cols.hue, cols.sat, rgblight_get_val()); //reuse currrent brightness
     }
+#else
+    (void)save;
+#endif
 }
 
 // VIAL SPECIFIC FOR SVALBOARD + KEYBARD
-#ifdef VIAL_ENABLE
 void kb_sync_listener(uint8_t in_buflen, const void* in_data, uint8_t out_buflen, void* out_data) {
   global_saved_values.turbo_scan = ((const presence_rpc_t *)in_data)->turbo_scan;
 }
 
+#ifdef VIAL_ENABLE
 // Called from via_init, we can check here if we're a fresh
 // installation.
 void via_init_kb(void) {
   fresh_install = !via_eeprom_is_valid();
 }
+#endif
 
 void keyboard_post_init_kb(void) {
     read_eeprom_kb();
@@ -230,6 +247,7 @@ void housekeeping_task_kb(void) {
     }
 }
 
+#ifdef VIAL_ENABLE
 void raw_hid_receive_kb(uint8_t *data, uint8_t length) {
     // raw_hid_receive_kb uses data for both input and output.
     // If a command code is unknown, it is simply echoed back.
@@ -274,12 +292,15 @@ void raw_hid_receive_kb(uint8_t *data, uint8_t length) {
     }
 }
 
+#endif
+
 void sval_on_reconnect(void) {
     // Reset colors, or it won't communicate the right color.
+#ifdef RGBLIGHT_ENABLE
     rgblight_sethsv_noeeprom(0, 0, rgblight_get_val()); //reuse existing (eeprom) val, so brightness doesn't reset
+#endif
     sval_set_active_layer(sval_active_layer, true);
 }
-#endif
 
 #ifndef SVALBOARD_REENABLE_BOOTMAGIC_LITE
 // This is to override `bootmagic_lite` feature (see docs/feature_bootmagic.md),

@@ -94,6 +94,9 @@ bool scroll_timer_running = false;
 bool enable_scale_2 = false;
 bool enable_scale_3 = false;
 bool enable_scale_5 = false;
+bool enable_sprint_2 = false;
+bool enable_sprint_3 = false;
+bool enable_sprint_5 = false;
 
 static bool scroll_hold    = false,
             scroll_toggle  = false;
@@ -185,6 +188,20 @@ void update_axis_scroll_mode(int32_t h, int32_t v) {
     }
 }
 
+void handle_sprint_key(bool pressed, uint8_t multiplier) {
+    if (!pressed) {
+        div_mult_axis(&sniper_x, multiplier);
+        div_mult_axis(&sniper_y, multiplier);
+        div_mult_axis(&sniper_h, multiplier);
+        div_mult_axis(&sniper_v, multiplier);
+    } else {
+        mult_mult_axis(&sniper_x, multiplier);
+        mult_mult_axis(&sniper_y, multiplier);
+        mult_mult_axis(&sniper_h, multiplier);
+        mult_mult_axis(&sniper_v, multiplier);
+    }
+}
+
 void handle_sniper_key(bool pressed, uint8_t divisor) {
     if (!pressed) {
         div_div_axis(&sniper_x, divisor);
@@ -199,10 +216,11 @@ void handle_sniper_key(bool pressed, uint8_t divisor) {
     }
 }
 
+#if defined(SPLIT_POINTING_ENABLE) && defined(POINTING_DEVICE_COMBINED)
 report_mouse_t pointing_device_task_combined_user(report_mouse_t reportMouse1, report_mouse_t reportMouse2) {
     report_mouse_t ret_mouse;
 
-    if (enable_scale_2 || enable_scale_3 || enable_scale_5) {
+    if (enable_scale_2 || enable_scale_3 || enable_scale_5 || enable_sprint_2 || enable_sprint_3 || enable_sprint_5) {
         reportMouse1.x = add_to_axis(&sniper_x, reportMouse1.x);
         reportMouse1.y = add_to_axis(&sniper_y, reportMouse1.y);
         reportMouse1.h = add_to_axis(&sniper_h, reportMouse1.h);
@@ -277,12 +295,14 @@ report_mouse_t pointing_device_task_combined_user(report_mouse_t reportMouse1, r
 
     return pointing_device_task_user(ret_mouse);
 }
+#endif
 
 void toggle_axis_scroll_lock(void) {
     global_saved_values.axis_scroll_lock = !global_saved_values.axis_scroll_lock;
     write_eeprom_kb();
 }
 
+#ifndef SVAL_DUALUSB
 report_mouse_t pointing_device_task_user(report_mouse_t reportMouse) {
    if (reportMouse.x == 0 && reportMouse.y == 0 && reportMouse.h == 0 && reportMouse.v == 0)
         return reportMouse;
@@ -291,6 +311,7 @@ report_mouse_t pointing_device_task_user(report_mouse_t reportMouse) {
 
     return reportMouse;
 }
+#endif
 #endif
 
 void mh_change_timeouts(void) {
@@ -447,6 +468,18 @@ bool process_record_kb(uint16_t keycode, keyrecord_t *record) {
                 enable_scale_5 = true;
                 handle_sniper_key(true, 5);
                 return false;
+            case SV_SPRINT_2:
+                enable_sprint_2 = true;
+                handle_sprint_key(true, 2);
+                return false;
+            case SV_SPRINT_3:
+                enable_sprint_3 = true;
+                handle_sprint_key(true, 3);
+                return false;
+            case SV_SPRINT_5:
+                enable_sprint_5 = true;
+                handle_sprint_key(true, 5);
+                return false;
             case SV_SCROLL_HOLD:
                 scroll_hold = true;
                 return false;
@@ -492,6 +525,18 @@ bool process_record_kb(uint16_t keycode, keyrecord_t *record) {
             case SV_SNIPER_5:
                 enable_scale_5 = false;
                 handle_sniper_key(false, 5);
+                return false;
+            case SV_SPRINT_2:
+                enable_sprint_2 = false;
+                handle_sprint_key(false, 2);
+                return false;
+            case SV_SPRINT_3:
+                enable_sprint_3 = false;
+                handle_sprint_key(false, 3);
+                return false;
+            case SV_SPRINT_5:
+                enable_sprint_5 = false;
+                handle_sprint_key(false, 5);
                 return false;
             case SV_SCROLL_HOLD:
                 scroll_hold = false;
