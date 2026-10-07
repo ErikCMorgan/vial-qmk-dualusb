@@ -45,6 +45,7 @@ enum my_keycodes {
     SV_SPRINT_2,
     SV_SPRINT_3,
     SV_SPRINT_5,
+    SV_FLYWHEEL,
     KC_NORMAL_HOLD = SAFE_RANGE,
     KC_FUNC_HOLD,
     SV_SAFE_RANGE, // Keycodes over this are safe on Svalboard.

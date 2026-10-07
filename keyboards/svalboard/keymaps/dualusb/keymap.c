@@ -169,6 +169,7 @@ bool is_keyboard_master_impl(void) {
 #define SVAL_F_SPRINT2      (1 << 6)
 #define SVAL_F_SPRINT3      (1 << 7)
 #define SVAL_F_SPRINT5      (1 << 8)
+#define SVAL_F_FLYWHEEL     (1 << 9)
 
 #define SVAL_F_SCALE_MASK   (SVAL_F_SCALE2 | SVAL_F_SCALE3 | SVAL_F_SCALE5 | SVAL_F_SPRINT2 | SVAL_F_SPRINT3 | SVAL_F_SPRINT5)
 
@@ -209,6 +210,17 @@ static sval_sync_t sync_out;
 static sval_sync_t sync_in;
 static uint8_t     slave_motion;
 static uint32_t    last_sync_ms;
+static int16_t     fw_h;
+static int16_t     fw_v;
+static bool        fw_coasting;
+
+static int16_t fw_peak(int16_t peak, int16_t sample) {
+    int32_t a = peak < 0 ? -peak : peak;
+    int32_t b = sample < 0 ? -sample : sample;
+    if (b > a) return sample;
+    if ((peak < 0) != (sample < 0) && sample != 0) return sample;
+    return peak;
+}
 
 static int32_t sval_norm(int16_t v, uint16_t dpi) {
     int32_t x = v;
@@ -314,6 +326,7 @@ report_mouse_t pointing_device_task_user(report_mouse_t reportMouse) {
     if (enable_sprint_2) sync_out.flags |= SVAL_F_SPRINT2;
     if (enable_sprint_3) sync_out.flags |= SVAL_F_SPRINT3;
     if (enable_sprint_5) sync_out.flags |= SVAL_F_SPRINT5;
+    if (enable_flywheel) sync_out.flags |= SVAL_F_FLYWHEEL;
     sync_out.turbo_scan = global_saved_values.turbo_scan;
     sync_out.left_dpi   = (uint16_t)get_left_dpi();
     sync_out.right_dpi  = (uint16_t)get_right_dpi();
@@ -362,7 +375,14 @@ report_mouse_t pointing_device_task_user(report_mouse_t reportMouse) {
         reportMouse.y = 0;
     }
 
-    if ((reportMouse.h != 0 || reportMouse.v != 0 || in.h != 0 || in.v != 0) && !scroll_timer_running) {
+    bool fw_on = (in.flags & SVAL_F_FLYWHEEL) != 0;
+    if (!fw_on) {
+        fw_h        = 0;
+        fw_v        = 0;
+        fw_coasting = false;
+    }
+
+    if ((reportMouse.h != 0 || reportMouse.v != 0 || in.h != 0 || in.v != 0 || (fw_on && (fw_h || fw_v))) && !scroll_timer_running) {
         scroll_timer_running = true;
         scroll_timer         = timer_read();
     }
@@ -392,6 +412,23 @@ report_mouse_t pointing_device_task_user(report_mouse_t reportMouse) {
         } else {
             reportMouse.h = scroll_accumulator_h;
             reportMouse.v = scroll_accumulator_v;
+        }
+
+        if (fw_on) {
+            if (scroll_accumulator_h || scroll_accumulator_v) {
+                if (fw_coasting) {
+                    fw_h = reportMouse.h;
+                    fw_v = reportMouse.v;
+                } else {
+                    fw_h = fw_peak(fw_h, reportMouse.h);
+                    fw_v = fw_peak(fw_v, reportMouse.v);
+                }
+                fw_coasting = false;
+            } else {
+                fw_coasting = true;
+            }
+            reportMouse.h = fw_h;
+            reportMouse.v = fw_v;
         }
 
         scroll_timer_running   = false;

@@ -97,6 +97,7 @@ bool enable_scale_5 = false;
 bool enable_sprint_2 = false;
 bool enable_sprint_3 = false;
 bool enable_sprint_5 = false;
+bool enable_flywheel = false;
 
 static bool scroll_hold    = false,
             scroll_toggle  = false;
@@ -480,6 +481,9 @@ bool process_record_kb(uint16_t keycode, keyrecord_t *record) {
                 enable_sprint_5 = true;
                 handle_sprint_key(true, 5);
                 return false;
+            case SV_FLYWHEEL:
+                enable_flywheel = true;
+                return false;
             case SV_SCROLL_HOLD:
                 scroll_hold = true;
                 return false;
@@ -537,6 +541,9 @@ bool process_record_kb(uint16_t keycode, keyrecord_t *record) {
             case SV_SPRINT_5:
                 enable_sprint_5 = false;
                 handle_sprint_key(false, 5);
+                return false;
+            case SV_FLYWHEEL:
+                enable_flywheel = false;
                 return false;
             case SV_SCROLL_HOLD:
                 scroll_hold = false;

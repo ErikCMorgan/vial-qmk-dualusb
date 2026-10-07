@@ -117,6 +117,10 @@
       {"shortName": "Sprint\n5x",
        "title": "Hold to move the pointer at 5x speed.",
        "name": "SV_SPRINT_5"
+      },
+      {"shortName": "Fly\nwheel",
+       "title": "Hold and flick a scroll ball to keep scrolling at that speed until released.",
+       "name": "SV_FLYWHEEL"
       }
     ],
     "layouts": {
